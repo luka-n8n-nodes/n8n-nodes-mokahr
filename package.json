@@ -1,0 +1,67 @@
+{
+  "name": "@luka-cat-mimi/n8n-nodes-mokahr",
+  "version": "0.1.0",
+  "description": "Moka Hr 招聘 Open API 的 n8n 社区节点",
+  "keywords": [
+    "n8n",
+    "n8n-node",
+    "n8n-community-node-package",
+    "moka",
+    "mokahr"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "homepage": "https://github.com/luka-n8n-nodes/n8n-nodes-mokahr#readme",
+  "author": {
+    "name": "luka-cat",
+    "email": "luka.cat.mimi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luka-n8n-nodes/n8n-nodes-mokahr.git"
+  },
+  "engines": {
+    "node": ">=20.15"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "n8n-node build",
+    "build:watch": "tsc --watch",
+    "dev": "n8n-node dev",
+    "format": "prettier credentials nodes --write",
+    "lint": "n8n-node lint",
+    "lint:fix": "n8n-node lint --fix",
+    "release": "n8n-node release",
+    "prepublishOnly": "n8n-node prerelease"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/MokaHrApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/MokaHr/MokaHr.node.js"
+    ],
+    "strict": false
+  },
+  "devDependencies": {
+    "@n8n/node-cli": "*",
+    "@types/node": "^20.19.43",
+    "eslint": "9.39.4",
+    "prettier": "3.8.3",
+    "release-it": "20.2.0",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "glob": "^13.0.6"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}
