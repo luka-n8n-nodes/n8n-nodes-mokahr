@@ -1,6 +1,6 @@
 {
   "name": "@luka-cat-mimi/n8n-nodes-mokahr",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Moka Hr 招聘 Open API 的 n8n 社区节点",
   "keywords": [
     "n8n",
