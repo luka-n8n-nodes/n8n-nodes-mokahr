@@ -1,7 +1,12 @@
 import { IDataObject, NodeOperationError } from 'n8n-workflow';
 import { ResourceOperations } from '../../../help/type/IResource';
 import { mokaRequest } from '../../../help/utils/MokaRequest';
-import { requestBatchingOption, timeoutOption } from '../../../help/utils/sharedOptions';
+import {
+	proxyOption,
+	readRequestOptions,
+	requestBatchingOption,
+	timeoutOption,
+} from '../../../help/utils/sharedOptions';
 
 /**
  * 根据申请 ID 获取简历解析文本
@@ -56,12 +61,11 @@ const operation: ResourceOperations = {
 			type: 'collection',
 			placeholder: 'Add Option',
 			default: {},
-			options: [requestBatchingOption, timeoutOption()],
+			options: [requestBatchingOption, timeoutOption(), proxyOption],
 		},
 	],
 	call: async function (index) {
-		const optionsParam = this.getNodeParameter('options', index, {}) as { timeout?: number };
-		const timeout = Number(optionsParam.timeout ?? 0) > 0 ? Number(optionsParam.timeout) : 0;
+		const { timeout, proxy } = readRequestOptions.call(this, index);
 
 		let applicationId: number;
 		try {
@@ -80,6 +84,7 @@ const operation: ResourceOperations = {
 			body: { applicationId },
 			itemIndex: index,
 			timeout,
+			proxy,
 		});
 
 		return data && typeof data === 'object' && !Array.isArray(data) ? data : {};

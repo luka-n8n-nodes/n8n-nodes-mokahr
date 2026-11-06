@@ -1,7 +1,7 @@
 import { IDataObject, NodeOperationError } from 'n8n-workflow';
 import { ResourceOperations } from '../../../help/type/IResource';
 import { mokaRequest } from '../../../help/utils/MokaRequest';
-import { timeoutOption } from '../../../help/utils/sharedOptions';
+import { proxyOption, readRequestOptions, timeoutOption } from '../../../help/utils/sharedOptions';
 
 /**
  * 根据邮箱、手机号、身份证号查询申请信息（最多返回一百条）
@@ -94,15 +94,14 @@ const operation: ResourceOperations = {
 			type: 'collection',
 			placeholder: 'Add Option',
 			default: {},
-			options: [timeoutOption()],
+			options: [timeoutOption(), proxyOption],
 		},
 	],
 	call: async function (index) {
 		const emailList = parseStringList(this.getNodeParameter('emailList', index, ''));
 		const phoneList = parseStringList(this.getNodeParameter('phoneList', index, ''));
 		const citizenIdList = parseStringList(this.getNodeParameter('citizenIdList', index, ''));
-		const optionsParam = this.getNodeParameter('options', index, {}) as { timeout?: number };
-		const timeout = Number(optionsParam.timeout ?? 0) > 0 ? Number(optionsParam.timeout) : 0;
+		const { timeout, proxy } = readRequestOptions.call(this, index);
 
 		const lists: Array<[string, string[]]> = [
 			['邮箱列表', emailList],
@@ -137,6 +136,7 @@ const operation: ResourceOperations = {
 			body,
 			itemIndex: index,
 			timeout,
+			proxy,
 		});
 
 		return Array.isArray(data?.applicationList) ? data.applicationList : [];

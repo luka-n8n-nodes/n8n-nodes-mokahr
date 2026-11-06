@@ -46,6 +46,19 @@ export const requestBatchingOption: INodeProperties = {
 };
 
 /**
+ * 通用 Proxy 节点参数。留空表示不走代理。
+ * 地址格式与 n8n HTTP Request 节点一致：http://user:pass@host:port。
+ */
+export const proxyOption: INodeProperties = {
+	displayName: 'Proxy',
+	name: 'proxy',
+	type: 'string',
+	default: '',
+	placeholder: 'e.g. http://myproxy:3128',
+	description: 'HTTP 代理地址，可带账号密码：http://user:pass@host:port。留空则不使用代理',
+};
+
+/**
  * 通用 Timeout 节点参数。默认 0 = 沿用 n8n httpRequest 默认超时。
  */
 export function timeoutOption(opts?: { defaultMs?: number }): INodeProperties {
@@ -160,6 +173,26 @@ export function batchingOption(opts?: {
  * 从节点参数读取 Batching 配置。
  * 未展开 Batching 时使用默认值（3 次 / 1000ms）。
  */
+/**
+ * 从 Options 读取本次请求共用的 timeout 与 proxy。
+ * timeout 为 0 表示不设置超时；proxy 为空字符串表示不使用代理。
+ */
+export function readRequestOptions(
+	this: IExecuteFunctions,
+	index: number,
+	parentParam: string = 'options',
+): { timeout: number; proxy: string } {
+	const params = this.getNodeParameter(parentParam, index, {}) as {
+		timeout?: number;
+		proxy?: string;
+	};
+	const timeout = Number(params.timeout ?? 0);
+	return {
+		timeout: timeout > 0 ? timeout : 0,
+		proxy: typeof params.proxy === 'string' ? params.proxy.trim() : '',
+	};
+}
+
 export function readBatchConfig(
 	this: IExecuteFunctions,
 	index: number,

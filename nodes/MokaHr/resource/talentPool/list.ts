@@ -1,7 +1,12 @@
 import { IDataObject, NodeOperationError } from 'n8n-workflow';
 import { ResourceOperations } from '../../../help/type/IResource';
 import { mokaRequest } from '../../../help/utils/MokaRequest';
-import { requestBatchingOption, timeoutOption } from '../../../help/utils/sharedOptions';
+import {
+	proxyOption,
+	readRequestOptions,
+	requestBatchingOption,
+	timeoutOption,
+} from '../../../help/utils/sharedOptions';
 
 /**
  * 查询人才库列表
@@ -99,12 +104,11 @@ const operation: ResourceOperations = {
 			type: 'collection',
 			placeholder: 'Add Option',
 			default: {},
-			options: [requestBatchingOption, timeoutOption()],
+			options: [requestBatchingOption, timeoutOption(), proxyOption],
 		},
 	],
 	call: async function (index) {
-		const optionsParam = this.getNodeParameter('options', index, {}) as { timeout?: number };
-		const timeout = Number(optionsParam.timeout ?? 0) > 0 ? Number(optionsParam.timeout) : 0;
+		const { timeout, proxy } = readRequestOptions.call(this, index);
 
 		let hireMode: number | undefined;
 		let range: TalentPoolRange;
@@ -128,6 +132,7 @@ const operation: ResourceOperations = {
 			path: `${PATH}?${params.toString()}`,
 			itemIndex: index,
 			timeout,
+			proxy,
 			returnFullResponse: true,
 			successCodes: [0, 200],
 		});

@@ -4,7 +4,9 @@ import { mokaRequest } from '../../../help/utils/MokaRequest';
 import {
 	batchingOption,
 	paginationOptions,
+	proxyOption,
 	readBatchConfig,
+	readRequestOptions,
 	timeoutOption,
 } from '../../../help/utils/sharedOptions';
 
@@ -408,13 +410,12 @@ const operation: ResourceOperations = {
 			type: 'collection',
 			placeholder: 'Add Option',
 			default: {},
-			options: [timeoutOption(), batchingOption({ showWhen: { '/returnAll': [true] } })],
+			options: [timeoutOption(), batchingOption({ showWhen: { '/returnAll': [true] } }), proxyOption],
 		},
 	],
 	call: async function (index) {
 		const returnAll = this.getNodeParameter('returnAll', index, false) as boolean;
-		const optionsParam = this.getNodeParameter('options', index, {}) as { timeout?: number };
-		const timeout = Number(optionsParam.timeout ?? 0) > 0 ? Number(optionsParam.timeout) : 0;
+		const { timeout, proxy } = readRequestOptions.call(this, index);
 		const filters = this.getNodeParameter('filters', index, {}) as IDataObject;
 
 		let filterBody: IDataObject;
@@ -435,6 +436,7 @@ const operation: ResourceOperations = {
 				body: cursor ? { next: cursor } : { ...filterBody, limit: pageSize },
 				itemIndex: index,
 				timeout,
+				proxy,
 				returnFullResponse: true,
 			});
 			return response && typeof response === 'object' ? response : {};

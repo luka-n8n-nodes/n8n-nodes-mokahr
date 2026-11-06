@@ -38,6 +38,8 @@ export interface IMokaRequestOptions {
 	/** 业务接口路径，例如 '/api-platform/v3/applications/list_by_contact_or_id' */
 	path: string;
 	timeout?: number;
+	/** HTTP 代理地址，例如 http://user:pass@host:port。空字符串表示不使用代理 */
+	proxy?: string;
 	itemIndex?: number;
 	/** 业务成功 code 列表，默认 [200] */
 	successCodes?: ReadonlyArray<number>;
@@ -61,6 +63,45 @@ function resolveBaseUrl(region: string): string {
  * Moka 密钥配置页给出的 value 已是 `Basic <base64>`，原样作为 Authorization。
  * 只复制了 base64 段时补上 Basic 前缀，不再编码。
  */
+/**
+ * 把 `http://user:pass@host:port` 解析成 httpRequest 需要的 proxy 对象。
+ * 不把原始地址写进错误信息，避免把账号密码带回节点输出。
+ */
+function parseProxy(proxy: string): NonNullable<IHttpRequestOptions['proxy']> {
+	let parsed: URL;
+	try {
+		parsed = new URL(proxy);
+	} catch {
+		throw new Error('Proxy 不是有效地址，例如 http://myproxy:3128');
+	}
+
+	if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+		throw new Error('Proxy 必须以 http:// 或 https:// 开头，例如 http://myproxy:3128');
+	}
+	if (!parsed.hostname) {
+		throw new Error('Proxy 缺少主机名，例如 http://myproxy:3128');
+	}
+
+	const portText = parsed.port || (parsed.protocol === 'https:' ? '443' : '80');
+	const port = Number(portText);
+	if (!Number.isInteger(port) || port < 1 || port > 65535) {
+		throw new Error('Proxy 端口必须是 1 到 65535 之间的整数');
+	}
+
+	const config: NonNullable<IHttpRequestOptions['proxy']> = {
+		protocol: parsed.protocol.slice(0, -1),
+		host: parsed.hostname,
+		port,
+	};
+	if (parsed.username || parsed.password) {
+		config.auth = {
+			username: decodeURIComponent(parsed.username),
+			password: decodeURIComponent(parsed.password),
+		};
+	}
+	return config;
+}
+
 function buildAuthorization(apiKey: string): string {
 	const value = apiKey.trim().replace(/^['"]|['"]$/g, '');
 	const token = value.replace(/^basic\s+/i, '').trim();
@@ -148,9 +189,21 @@ export async function mokaRequest<T = IDataObject>(
 		requestOptions.timeout = options.timeout;
 	}
 
+	const proxy = options.proxy?.trim() ?? '';
+	if (proxy) {
+		try {
+			requestOptions.proxy = parseProxy(proxy);
+		} catch (error) {
+			throw new NodeOperationError(node, error instanceof Error ? error.message : String(error), {
+				itemIndex,
+			});
+		}
+	}
+
 	ctx.logger?.debug?.(`[mokaRequest] ${requestOptions.method} ${path}`, {
 		region,
 		timeout: requestOptions.timeout,
+		proxy: proxy ? true : false,
 	});
 
 	try {

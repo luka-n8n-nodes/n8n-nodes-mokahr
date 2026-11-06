@@ -1,7 +1,7 @@
 import { IDataObject, NodeOperationError } from 'n8n-workflow';
 import { ResourceOperations } from '../../../help/type/IResource';
 import { mokaRequest } from '../../../help/utils/MokaRequest';
-import { timeoutOption } from '../../../help/utils/sharedOptions';
+import { proxyOption, readRequestOptions, timeoutOption } from '../../../help/utils/sharedOptions';
 
 /**
  * 获取全部阶段下的候选人信息
@@ -120,12 +120,11 @@ const operation: ResourceOperations = {
 			type: 'collection',
 			placeholder: 'Add Option',
 			default: {},
-			options: [timeoutOption()],
+			options: [timeoutOption(), proxyOption],
 		},
 	],
 	call: async function (index) {
-		const optionsParam = this.getNodeParameter('options', index, {}) as { timeout?: number };
-		const timeout = Number(optionsParam.timeout ?? 0) > 0 ? Number(optionsParam.timeout) : 0;
+		const { timeout, proxy } = readRequestOptions.call(this, index);
 
 		let stage: string | undefined;
 		let fromTime: string | undefined;
@@ -148,6 +147,7 @@ const operation: ResourceOperations = {
 			path: buildPath(stage, fromTime),
 			itemIndex: index,
 			timeout,
+			proxy,
 			returnFullResponse: true,
 			successCodes: [0, 200],
 		});

@@ -1,7 +1,12 @@
 import { IDataObject, NodeOperationError } from 'n8n-workflow';
 import { ResourceOperations } from '../../../help/type/IResource';
 import { mokaRequest } from '../../../help/utils/MokaRequest';
-import { requestBatchingOption, timeoutOption } from '../../../help/utils/sharedOptions';
+import {
+	proxyOption,
+	readRequestOptions,
+	requestBatchingOption,
+	timeoutOption,
+} from '../../../help/utils/sharedOptions';
 
 /**
  * 查询简历筛选评价表
@@ -44,13 +49,12 @@ const operation: ResourceOperations = {
 			type: 'collection',
 			placeholder: 'Add Option',
 			default: {},
-			options: [requestBatchingOption, timeoutOption()],
+			options: [requestBatchingOption, timeoutOption(), proxyOption],
 		},
 	],
 	call: async function (index) {
 		const hireMode = Number(this.getNodeParameter('hireMode', index));
-		const optionsParam = this.getNodeParameter('options', index, {}) as { timeout?: number };
-		const timeout = Number(optionsParam.timeout ?? 0) > 0 ? Number(optionsParam.timeout) : 0;
+		const { timeout, proxy } = readRequestOptions.call(this, index);
 
 		if (hireMode !== 1 && hireMode !== 2) {
 			throw new NodeOperationError(this.getNode(), '招聘模式只能是社招或校招', {
@@ -64,6 +68,7 @@ const operation: ResourceOperations = {
 			body: { hireMode },
 			itemIndex: index,
 			timeout,
+			proxy,
 			successCodes: [0, 200],
 		});
 
